@@ -132,11 +132,16 @@ async function main() {
     escrow.connect(sender).deposit(99, 3600, { value: HALF })
   );
   const depTx = await escrow.connect(sender).deposit(0, 3600, { value: HALF });
-  await depTx.wait();
+  const depRcpt = await depTx.wait();
   check("deposit succeeds", (await escrow.escrowCount()) === 1n);
   check(
     "contract holds the escrowed amount",
-    (await provider.getBalance(await escrow.getAddress())) === HALF
+    // Balance reads that must reflect a just-mined transaction are
+    // pinned to that transaction's block: a plain "latest" read can
+    // be served from the provider's cached block number on fast
+    // machines and silently return the pre-transaction balance
+    // (diagnosed 19 Nov 2026; the pinned read matched to the wei).
+    (await provider.getBalance(await escrow.getAddress(), depRcpt.blockNumber)) === HALF
   );
   let esc = await escrow.getEscrow(0);
   check(
@@ -153,11 +158,11 @@ async function main() {
   const claimTx = await escrow.connect(nameOwner).claim(0);
   const claimReceipt = await claimTx.wait();
   const claimGas = claimReceipt.gasUsed * claimReceipt.gasPrice;
-  const ownerAfter = await provider.getBalance(await nameOwner.getAddress());
+  const ownerAfter = await provider.getBalance(await nameOwner.getAddress(), claimReceipt.blockNumber);
   check("claim by name owner succeeds and pays exactly the amount", ownerAfter - ownerBefore + claimGas === HALF);
   esc = await escrow.getEscrow(0);
   check("escrow status is Claimed and amount zeroed", esc.status === 1n && esc.amount === 0n);
-  check("contract balance back to zero", (await provider.getBalance(await escrow.getAddress())) === 0n);
+  check("contract balance back to zero", (await provider.getBalance(await escrow.getAddress(), claimReceipt.blockNumber)) === 0n);
   await expectRevert("double claim reverts", escrow.connect(nameOwner).claim(0));
   await expectRevert("refund after claim reverts", escrow.connect(sender).refund(0));
 
@@ -173,10 +178,17 @@ async function main() {
   check("test clock is past the deadline", BigInt(afterWarp.timestamp) > (await escrow.getEscrow(1)).deadline);
   await expectRevert("refund by non-sender reverts", escrow.connect(stranger).refund(1));
   const senderBefore = await provider.getBalance(await sender.getAddress());
-  const refTx = await escrow.connect(sender).refund(1);
+  // Explicit gas limit: Ganache's eth_estimateGas (its exactimate
+  // binary search) intermittently reports a plain revert for this
+  // warp-dependent refund even though eth_call and a manual-gas send
+  // succeed against byte-identical state (diagnosed 19 Nov 2026 in a
+  // fresh npm ci environment; state, balances, and timestamps were
+  // printed and correct at the failure point). The exact payout
+  // assertions below are unchanged.
+  const refTx = await escrow.connect(sender).refund(1, { gasLimit: 300000 });
   const refReceipt = await refTx.wait();
   const refGas = refReceipt.gasUsed * refReceipt.gasPrice;
-  const senderAfter = await provider.getBalance(await sender.getAddress());
+  const senderAfter = await provider.getBalance(await sender.getAddress(), refReceipt.blockNumber);
   check("refund after deadline returns exactly the amount", senderAfter - senderBefore + refGas === HALF);
   esc = await escrow.getEscrow(1);
   check("escrow status is Refunded", esc.status === 2n);
@@ -209,8 +221,8 @@ async function main() {
   const evilEscrowId = (await escrow.escrowCount()) - 1n;
   await (await claimer.setTarget(await escrow.getAddress(), evilEscrowId)).wait();
   const claimerBefore = await provider.getBalance(claimerAddr);
-  await (await claimer.doClaim(await escrow.getAddress(), evilEscrowId)).wait();
-  const claimerAfter = await provider.getBalance(claimerAddr);
+  const doClaimRcpt = await (await claimer.doClaim(await escrow.getAddress(), evilEscrowId)).wait();
+  const claimerAfter = await provider.getBalance(claimerAddr, doClaimRcpt.blockNumber);
   check("reentrant inner claim was attempted", (await claimer.attacked()) === true);
   check("attacker received the amount exactly once", claimerAfter - claimerBefore === HALF);
   const evilEsc = await escrow.getEscrow(evilEscrowId);

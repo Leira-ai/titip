@@ -140,7 +140,10 @@ async function main() {
   const ownerBefore = await provider.getBalance(await nameOwner.getAddress());
   const dustClaim = await escrow.connect(nameOwner).claim(dustId);
   const dustRcpt = await dustClaim.wait();
-  const ownerAfter = await provider.getBalance(await nameOwner.getAddress());
+  // Pinned to the claim's block: a plain "latest" balance read can
+  // be served stale from the provider's cached block number on fast
+  // machines (same diagnosis as in run-tests.js, 19 Nov 2026).
+  const ownerAfter = await provider.getBalance(await nameOwner.getAddress(), dustRcpt.blockNumber);
   check("1 wei deposit claims exactly 1 wei", ownerAfter - ownerBefore + dustRcpt.gasUsed * dustRcpt.gasPrice === 1n);
 
   console.log("\n-- refund boundary: the exact deadline second --");
@@ -233,9 +236,11 @@ async function main() {
   await provider.send("evm_increaseTime", [3601]);
   await (await deployer.sendTransaction({ to: await deployer.getAddress(), value: 0 })).wait();
   const sBefore = await provider.getBalance(await sender.getAddress());
-  const rfTx = await escrow.connect(sender).refund(rejEscId);
+  // Explicit gas limit for the same Ganache estimateGas quirk
+  // documented in run-tests.js (warp-dependent refund).
+  const rfTx = await escrow.connect(sender).refund(rejEscId, { gasLimit: 300000 });
   const rfRc = await rfTx.wait();
-  const sAfter = await provider.getBalance(await sender.getAddress());
+  const sAfter = await provider.getBalance(await sender.getAddress(), rfRc.blockNumber);
   check("sender refunds in full after the failed-claim deadline", sAfter - sBefore + rfRc.gasUsed * rfRc.gasPrice === HALF);
 
   console.log("\n-- reentrant refund attempt --");
@@ -248,9 +253,9 @@ async function main() {
   await (await refunder.setTarget(await escrow.getAddress(), rrId)).wait();
   await provider.send("evm_increaseTime", [3601]);
   await (await deployer.sendTransaction({ to: await deployer.getAddress(), value: 0 })).wait();
-  await (await refunder.doRefund()).wait();
+  const rrRcpt = await (await refunder.doRefund()).wait();
   check("reentrant refund was attempted from the payout hook", (await refunder.attacked()) === true);
-  check("refunder received the amount exactly once", (await provider.getBalance(refunderAddr)) === HALF);
+  check("refunder received the amount exactly once", (await provider.getBalance(refunderAddr, rrRcpt.blockNumber)) === HALF);
   check("escrow settled as Refunded once", (await escrow.getEscrow(rrId)).status === 2n);
 
   console.log("\n-- two deposits, independent settlement --");
