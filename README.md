@@ -18,11 +18,18 @@ Built for the Binance Wallet x BNB Chain Agent ID Hackathon
   full money flow (issue card, deposit, claim, refund after deadline)
   was executed both by script and from the product page itself, with
   every payout reconciled to the wei.
-- **Mainnet: not deployed yet.** Deployment is prepared as a
-  simulation-first script (`deploy/` in the project repo, not part of
-  this public tree) and waits for an explicit go decision. The web
-  app's mainnet mode is fail-closed until then: its escrow address is
-  `null` and it refuses to send anything on chain 56.
+- **Mainnet: LIVE (deployed 19 Nov 2026).** TitipEscrow is deployed
+  on BNB Chain (chain 56) against the real SPACE ID Agent ID
+  registry, deploy tx
+  `0x19e756c30280838b9447f32cce76f1e6d7231a236c942f2a95e8146285d9a3b9`,
+  and its source is Sourcify **exact match** verified (creation and
+  runtime). The deployed runtime bytecode is byte-identical to the
+  proven testnet deployment except for the immutable registry
+  address it points to. The web app's mainnet mode is the default
+  and is wired to this contract; testnet mode stays available for
+  rehearsal.
+- Product site (mainnet mode, default):
+  https://titip.utterhq.workers.dev/
 - Preview (testnet mode):
   https://titip.utterhq.workers.dev/?network=testnet
 
@@ -32,13 +39,18 @@ Built for the Binance Wallet x BNB Chain Agent ID Hackathon
 |---|---|---|
 | BSC Testnet (97) | TitipEscrow | `0x69CFC14869706EbD12EcD38a5746A0684E06b519` |
 | BSC Testnet (97) | MockAgentID (test registry) | `0x66bFC04f22DC2892dDeD3aCb97F21B7edDF0Ca23` |
-| BNB Chain (56) | TitipEscrow | not deployed yet |
+| BNB Chain (56) | TitipEscrow | `0x29a8b028a67696db8a07BccFCe0aB009D323E208` |
 | BNB Chain (56) | Agent ID registry (SPACE ID) | `0x60b9262456de011f7d15a54cdd8c48baaa8b022f` |
 
 Testnet source verification: Sourcify **exact match** (creation and
 runtime) for TitipEscrow on chain 97, verified 2026-11-18,
 matchId 59484606:
 https://repo.sourcify.dev/contracts/full_match/97/0x69CFC14869706EbD12EcD38a5746A0684E06b519/
+
+Mainnet source verification: Sourcify **exact match** (creation and
+runtime) for TitipEscrow on chain 56, verified 2026-11-19,
+matchId 59508184:
+https://repo.sourcify.dev/contracts/full_match/56/0x29a8b028a67696db8a07BccFCe0aB009D323E208/
 
 ## How it works
 

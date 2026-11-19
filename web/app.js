@@ -16,10 +16,12 @@
  * plain-words messages in both languages.
  *
  * Network modes:
- * - mainnet (default): BNB Chain (56) with the real Agent ID registry.
- *   escrowAddress stays null, so the adapter is fail-closed absolutely:
- *   it refuses to broadcast anything on chain 56, and every action
- *   stops at the confirmation sheet with a plain-words message.
+ * - mainnet (default): BNB Chain (56) with the real Agent ID registry
+ *   and the live TitipEscrow deployment (Sourcify exact match on
+ *   chain 56, deploy/mainnet-state.json). The four actions broadcast
+ *   real mainnet transactions from the connected wallet. The adapter
+ *   still refuses to broadcast anything in a mode whose escrow
+ *   address is missing: that fail-closed guard stays in place.
  * - testnet (?network=testnet): BSC Testnet (97) wired to the Titip
  *   testnet deployment and its MockAgentID registry, clearly labelled.
  *   The four actions (create card, deposit, claim, refund) broadcast
@@ -40,7 +42,9 @@ const NETWORKS = {
       blockExplorerUrls: ["https://bscscan.com"],
     },
     agentIdRegistry: "0x60b9262456de011f7d15a54cdd8c48baaa8b022f",
-    escrowAddress: null, // mainnet deploy is a separate, later phase
+    // TitipEscrow mainnet deployment (deploy/mainnet-state.json),
+    // Sourcify exact match on chain 56
+    escrowAddress: "0x29a8b028a67696db8a07BccFCe0aB009D323E208",
   },
   testnet: {
     chainIdHex: "0x61", // BSC Testnet, 97
@@ -71,8 +75,8 @@ const STRINGS = {
     connect: "Hubungkan Wallet", disconnect: "Putuskan", switchChain: "Pindah ke BNB Chain",
     headline: "Bayar ke nama, bukan ke alamat acak.",
     lede: "Kirim BNB ke nama .ai lewat Titip. Uang terkunci di kontrak dan hanya bisa diambil pemilik nama itu. Lewat tenggat tanpa klaim, uang kembali utuh ke pengirim.",
-    deployNote: "Status: fondasi. Kontrak belum dideploy, jadi tombol transaksi menampilkan ringkasan dulu dan belum mengirim apa pun.",
-    testnetNote: "Testnet: halaman ini memakai deployment uji di BSC Testnet (chain 97) dengan registry Agent ID tiruan. Semua dana tBNB uji, bukan uang asli. Tombol transaksi di mode ini mengirim transaksi testnet beneran dari wallet kamu. Kontrak mainnet belum dideploy.",
+    deployNote: "Status: live. Kontrak TitipEscrow sudah dideploy di BNB Chain mainnet dan terverifikasi. Tombol transaksi mengirim transaksi beneran dari wallet kamu.",
+    testnetNote: "Testnet: halaman ini memakai deployment uji di BSC Testnet (chain 97) dengan registry Agent ID tiruan. Semua dana tBNB uji, bukan uang asli. Tombol transaksi di mode ini mengirim transaksi testnet beneran dari wallet kamu. Versi mainnet juga sudah live di BNB Chain; buka halaman ini tanpa parameter network=testnet untuk memakainya.",
     labStamp: "Sudah diklaim", labTo: "Penerima", labAmount: "Nominal",
     labAmountValue: "0,001 tBNB", labCard: "Kartu", labDeadline: "Tenggat",
     labDeadlineValue: "1 jam", labFrom: "Pengirim", labTx: "Tx klaim",
@@ -163,8 +167,8 @@ const STRINGS = {
     connect: "Connect Wallet", disconnect: "Disconnect", switchChain: "Switch to BNB Chain",
     headline: "Pay a name, not a random address.",
     lede: "Send BNB to a .ai name through Titip. The money locks in the contract and only the name owner can take it. Past the deadline with no claim, it returns to the sender in full.",
-    deployNote: "Status: foundation. The contract is not deployed yet, so transaction buttons show a summary first and send nothing.",
-    testnetNote: "Testnet: this page uses the Titip test deployment on BSC Testnet (chain 97) with a mock Agent ID registry. All funds are test tBNB, not real money. Transaction buttons in this mode send real testnet transactions from your wallet. The mainnet contract is not deployed yet.",
+    deployNote: "Status: live. The TitipEscrow contract is deployed on BNB Chain mainnet and verified. Transaction buttons send real transactions from your wallet.",
+    testnetNote: "Testnet: this page uses the Titip test deployment on BSC Testnet (chain 97) with a mock Agent ID registry. All funds are test tBNB, not real money. Transaction buttons in this mode send real testnet transactions from your wallet. The mainnet version is also live on BNB Chain; open this page without the network=testnet parameter to use it.",
     labStamp: "Claimed", labTo: "Recipient", labAmount: "Amount",
     labAmountValue: "0.001 tBNB", labCard: "Card", labDeadline: "Deadline",
     labDeadlineValue: "1 hour", labFrom: "Sender", labTx: "Claim tx",
@@ -738,9 +742,9 @@ function tokenIdOfHandle(handle) {
 /* estimate fee -> user confirms -> eth_sendTransaction -> poll       */
 /* receipt -> final status in place. Simulation failure means the     */
 /* confirm button never enables: the action is not offered.           */
-/* Mainnet is fail-closed absolutely: escrowAddress is null there,    */
-/* and the runner refuses any send unless the wallet is on the        */
-/* configured chain of a mode that has a deployed escrow.             */
+/* The runner refuses any send unless the wallet is on the           */
+/* configured chain of a mode that has a deployed escrow address;     */
+/* a mode without one stays fail-closed.                              */
 /* ------------------------------------------------------------------ */
 
 let pendingAction = null;
