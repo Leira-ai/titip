@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Titip: Bayar ke Nama .ai, Aman Sampai Dikonfirmasi</title>
+<meta name="description" content="Titip adalah pembayaran ke nama .ai dengan escrow on-chain. Dana hanya bisa diambil pemilik nama, atau kembali ke pengirim sesudah tenggat.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Titip">
+<meta property="og:title" content="Titip: Bayar ke Nama .ai, Aman Sampai Dikonfirmasi">
+<meta property="og:description" content="Kirim BNB ke nama .ai lewat escrow on-chain. Uang terkunci di kontrak, hanya bisa diambil pemilik nama itu, atau kembali utuh ke pengirim sesudah tenggat tanpa klaim.">
+<meta property="og:url" content="https://titip.utterhq.workers.dev/">
+<meta property="og:image" content="https://titip.utterhq.workers.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kartu titipan Titip untuk penerima titipuji.ai dengan stempel Sudah diklaim">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Titip: Bayar ke Nama .ai, Aman Sampai Dikonfirmasi">
+<meta name="twitter:description" content="Kirim BNB ke nama .ai lewat escrow on-chain. Hanya pemilik nama yang bisa mengambilnya, atau uang kembali utuh ke pengirim sesudah tenggat.">
+<meta name="twitter:image" content="https://titip.utterhq.workers.dev/og.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-mD4Awo08dY2DVIhcRGNqKZoe0mVC7SvYs+anNcwMFGE='; style-src 'self'; img-src 'self' data:; connect-src 'self' https://bsc-dataseed.binance.org https://bsc-dataseed1.defibit.io https://bsc-testnet-rpc.publicnode.com https://bsc-testnet-dataseed.bnbchain.org; object-src 'none'; base-uri 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#161a22" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eae4d3" media="(prefers-color-scheme: light)">
+<script>
+(function(){try{var t=localStorage.getItem("titip-theme");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">T</span>
+    <span class="brand-name">Titip</span>
+    <span id="network-badge" class="net-badge" hidden>TESTNET · BSC 97</span>
+  </div>
+  <div class="topbar-actions">
+    <div class="seg" role="group" aria-label="Language">
+      <button type="button" id="lang-id" class="seg-btn is-on">ID</button>
+      <button type="button" id="lang-en" class="seg-btn">EN</button>
+    </div>
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Tema">◐</button>
+    <button type="button" id="connect-btn" class="btn btn-primary" data-i18n="connect">Hubungkan Wallet</button>
+  </div>
+</header>
+
+<div id="wallet-bar" class="wallet-bar" hidden>
+  <span id="wallet-state" class="wallet-state"></span>
+  <button type="button" id="switch-chain-btn" class="btn btn-ghost" hidden data-i18n="switchChain">Pindah ke BNB Chain</button>
+  <button type="button" id="disconnect-btn" class="btn btn-ghost" data-i18n="disconnect">Putuskan</button>
+</div>
+
+<main class="page">
+  <section class="hero">
+    <h1 data-i18n="headline">Bayar ke nama, bukan ke alamat acak.</h1>
+    <p class="lede" data-i18n="lede">Kirim BNB ke nama .ai lewat Titip. Uang terkunci di kontrak dan hanya bisa diambil pemilik nama itu. Lewat tenggat tanpa klaim, uang kembali utuh ke pengirim.</p>
+
+    <div class="label-card" aria-label="Contoh kartu titipan dari testnet">
+      <span class="label-hole label-hole-l" aria-hidden="true"></span>
+      <span class="label-hole label-hole-r" aria-hidden="true"></span>
+      <span class="stamp" data-i18n="labStamp">Sudah diklaim</span>
+      <p class="lab-field">
+        <span class="lab-key" data-i18n="labTo">Penerima</span>
+        <span class="lab-name">titipuji.ai</span>
+      </p>
+      <p class="lab-field">
+        <span class="lab-key" data-i18n="labAmount">Nominal</span>
+        <span class="lab-amount" data-i18n="labAmountValue">0,001 tBNB</span>
+      </p>
+      <div class="lab-grid">
+        <p class="lab-field">
+          <span class="lab-key" data-i18n="labCard">Kartu</span>
+          <span class="lab-val">#0</span>
+        </p>
+        <p class="lab-field">
+          <span class="lab-key" data-i18n="labDeadline">Tenggat</span>
+          <span class="lab-val" data-i18n="labDeadlineValue">1 jam</span>
+        </p>
+        <p class="lab-field">
+          <span class="lab-key" data-i18n="labFrom">Pengirim</span>
+          <span class="lab-val lab-mono">0xd174…34A8</span>
+        </p>
+        <p class="lab-field">
+          <span class="lab-key" data-i18n="labTx">Tx klaim</span>
+          <span class="lab-val lab-mono">0x25eb…8705</span>
+        </p>
+      </div>
+    </div>
+    <p class="lab-caption" data-i18n="labCaption">Contoh nyata dari testnet Titip, terbukti on-chain.</p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#send-panel" data-i18n="ctaSend">Mulai kirim</a>
+      <a class="btn btn-ghost" href="#create-panel" data-i18n="ctaCreate">Buat kartu</a>
+    </div>
+    <p id="deploy-note" class="note" data-i18n="deployNote">Status: fondasi. Kontrak belum dideploy, jadi tombol transaksi menampilkan ringkasan dulu dan belum mengirim apa pun.</p>
+  </section>
+
+  <ol class="steps">
+    <li class="step">
+      <span class="step-num" aria-hidden="true">1</span>
+      <div>
+        <p class="step-title" data-i18n="step1T">Terbitkan kartu</p>
+        <p class="step-body" data-i18n="step1B">Pemilik nama .ai menerbitkan satu kartu pembayaran untuk dibagikan ke semua pembeli.</p>
+      </div>
+    </li>
+    <li class="step">
+      <span class="step-num" aria-hidden="true">2</span>
+      <div>
+        <p class="step-title" data-i18n="step2T">Kirim ke kartu itu</p>
+        <p class="step-body" data-i18n="step2B">BNB terkunci di kontrak Titip, bukan di alamat pribadi siapa pun.</p>
+      </div>
+    </li>
+    <li class="step">
+      <span class="step-num" aria-hidden="true">3</span>
+      <div>
+        <p class="step-title" data-i18n="step3T">Klaim, atau kembali</p>
+        <p class="step-body" data-i18n="step3B">Pemilik nama mengambilnya. Lewat tenggat tanpa klaim, pengirim menariknya kembali utuh.</p>
+      </div>
+    </li>
+  </ol>
+
+  <section class="card" id="create-panel" aria-labelledby="card-create-h">
+    <h2 id="card-create-h" data-i18n="createTitle">Buat kartu pembayaran</h2>
+    <p class="hint" data-i18n="createHint">Kartu hanya bisa diterbitkan oleh pemilik nama. Satu kartu cukup untuk dibagikan ke semua pembeli.</p>
+    <form id="create-form" novalidate>
+      <label class="field">
+        <span data-i18n="fName">Nama .ai kamu</span>
+        <span class="name-input"><input id="f-handle" name="handle" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="tokokamu" maxlength="20"><span class="suffix">.ai</span></span>
+      </label>
+      <label class="field">
+        <span data-i18n="fItem">Barang atau jasa</span>
+        <input id="f-item" name="item" type="text" maxlength="80" data-i18n-ph="fItemPh" placeholder="Contoh: Kopi 250 gram">
+      </label>
+      <label class="field">
+        <span data-i18n="fAmount">Nominal saran (BNB, boleh kosong)</span>
+        <input id="f-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.05">
+      </label>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="createBtn">Terbitkan kartu</button>
+      <p class="form-msg" id="create-msg" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section class="card" id="send-panel" aria-labelledby="card-send-h">
+    <h2 id="card-send-h" data-i18n="sendTitle">Kirim ke nama</h2>
+    <p class="hint" data-i18n="sendHint">Nama dan barang dibaca dari kontrak, bukan dari tautan, jadi tidak bisa dipalsukan pengirim tautan.</p>
+    <form id="send-form" novalidate>
+      <label class="field">
+        <span data-i18n="fCardId">Nomor kartu</span>
+        <input id="s-card" name="card" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+      </label>
+      <label class="field">
+        <span data-i18n="fSendAmount">Nominal (BNB)</span>
+        <input id="s-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.05">
+      </label>
+      <label class="field">
+        <span data-i18n="fDeadline">Tenggat klaim</span>
+        <select id="s-deadline" name="deadline">
+          <option value="3600" data-i18n="d0h">1 jam</option>
+          <option value="86400" data-i18n="d1">1 hari</option>
+          <option value="259200" data-i18n="d3">3 hari</option>
+          <option value="604800" selected data-i18n="d7">7 hari</option>
+          <option value="2592000" data-i18n="d30">30 hari</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="sendBtn">Tinjau dan kirim</button>
+      <p class="form-msg" id="send-msg" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="list-h">
+    <h2 id="list-h" data-i18n="listTitle">Titipan saya</h2>
+    <div id="escrow-list" class="escrow-list">
+      <div class="state state-empty" id="list-empty">
+        <p class="state-title" data-i18n="emptyTitle">Hubungkan wallet untuk melihat titipanmu.</p>
+        <p class="state-body" data-i18n="emptyBody">Sesudah wallet terhubung, titipan yang kamu kirim dan yang menunggu kamu klaim tampil di sini dengan statusnya.</p>
+      </div>
+    </div>
+    <p class="form-msg" id="list-msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="disclosure" aria-labelledby="owner-h">
+    <h2 id="owner-h" data-i18n="ownerTitle">Siapa bisa memindahkan uang di Titip?</h2>
+    <p data-i18n="ownerBody">Hanya dua pihak: pemilik nama penerima (untuk mengambil) dan pengirim asal (untuk menarik kembali sesudah tenggat). Kontrak Titip tidak punya pemilik, tidak punya tombol admin, dan tidak bisa menarik dana pengguna. Alamat registry Agent ID tidak bisa diganti sesudah deploy.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <p><span data-i18n="footContract">Kontrak:</span> <span id="contract-line">belum dideploy (fase fondasi)</span></p>
+  <p data-i18n="footPrivacy">Titip tidak mencatat alamat wallet untuk analitik.</p>
+</footer>
+
+<div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+<section id="confirm-sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+  <h2 id="sheet-h" tabindex="-1" data-i18n="sheetTitle">Periksa dulu sebelum tanda tangan</h2>
+  <dl class="sheet-rows" id="sheet-rows"></dl>
+  <p class="note" data-i18n="sheetVol">Nilai BNB bisa naik turun. Pastikan nominal dan nama penerima sudah benar.</p>
+  <div class="sheet-actions">
+    <button type="button" id="sheet-cancel" class="btn btn-ghost" data-i18n="cancel">Batal</button>
+    <button type="button" id="sheet-confirm" class="btn btn-primary" data-i18n="confirmSend">Kirim lewat wallet</button>
+  </div>
+  <p class="form-msg" id="sheet-msg" role="status" aria-live="polite"></p>
+  <p class="sheet-tx" id="sheet-tx" hidden></p>
+</section>
+
+<script src="app.js" defer></script>
+</body>
+</html>

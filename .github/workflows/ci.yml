@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install pinned dependencies
+        run: npm ci
+
+      - name: Contract behaviour suite (32 checks)
+        run: npm test
+
+      - name: Adversarial edge suite (27 checks)
+        run: node test/edge-tests.js
+
+      - name: Codec fuzz vs ethers (6,745 comparisons)
+        run: node test/codec-fuzz.js
+
+      - name: Frontend syntax check
+        run: node --check web/app.js

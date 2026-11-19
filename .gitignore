@@ -1,0 +1,19 @@
+# Dependencies and build output
+node_modules/
+build/
+
+# Local deploy machinery, logs, and state (never published: may carry
+# operational details of the signing environment)
+deploy/
+
+# QA screenshots and harnesses (kept locally; release shots are large)
+qa/
+
+# Internal reports (the public record is README.md and docs/)
+BUILD-REPORT.md
+EVALUATION-REPORT.md
+SUBMISSION-DRAFT.md
+
+# Misc
+.DS_Store
+*.log
